@@ -138,15 +138,45 @@ I ran all five in-scope questions and all five out-of-scope questions through re
 
 ## Run Log — Before
 
-<!-- Your five criteria, three runs each. `python run_eval.py --label before`
-     runs the questions, puts the OUT_OF_SCOPE ones through the gate, and
-     writes it all into results/ for you. Targets come from criteria.md; the
-     verdict column is your call.
+python run_eval.py --label before
 
-     Criterion 3 is measured in one deterministic pass rather than three, so
-     the same number goes in all three run columns. That's correct, not lazy.
+What are the quiet floors in Aldridge Hall, and how late is the library open during term?
+  run 1: pass  (best distance 0.209)
+  run 2: pass  (best distance 0.209)
+  run 3: pass  (best distance 0.209)
 
-     Milestone 1. -->
+How many washers and dryers are in Fenwick Court, and how much does laundry cost?
+  run 1: pass  (best distance 0.200)
+  run 2: pass  (best distance 0.200)
+  run 3: pass  (best distance 0.200)
+
+Which parking lots can students buy permits for, and is there a waitlist?
+  run 1: pass  (best distance 0.373)
+  run 2: pass  (best distance 0.373)
+  run 3: pass  (best distance 0.373)
+
+When can students declare a major, and is there a penalty or advantage to timing?
+  run 1: fail  (best distance 0.246)
+  run 2: fail  (best distance 0.246)
+  run 3: fail  (best distance 0.246)
+
+Is there a fee for an official transcript, and how do I get an unofficial one?
+  run 1: pass  (best distance 0.209)
+  run 2: pass  (best distance 0.209)
+  run 3: pass  (best distance 0.209)
+
+Out-of-scope questions (the gate should refuse these):
+  refused  (best distance 0.825)  What is the capital of Mongolia?
+  refused  (best distance 0.934)  How do I change the oil in a diesel engine?
+  refused  (best distance 0.886)  Who won the 1994 World Cup?
+  refused  (best distance 0.844)  What is the recommended dosage of ibuprofen for a headache?
+  refused  (best distance 0.896)  How do I write a for loop in Rust?
+  -> gate refused 5 of 5
+
+Wrote results/run_2026-09-24_2146_before.md
+15 model calls this session, 9074 tokens (8370 in, 704 out)
+
+Commit this file. It's the evidence the run actually happened.
 
 | Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
 |---|---|---|---|---|---|
