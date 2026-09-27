@@ -180,15 +180,43 @@ Commit this file. It's the evidence the run actually happened.
 
 | Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
 |---|---|---|---|---|---|
-| 1. Retrieved chunk contains the answer | 4 of 5 |  |  |  |  |
-| 2. Every answer names a source | 5 of 5 |  |  |  |  |
-| 3. Gate stops out-of-corpus questions | 4 of 5 |  |  |  |  |
-| 4. | | | | | |
-| 5. | | | | | |
+| 1. Retrieved chunk contains the answer | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 2. Every answer names a source | 5 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 3. Gate stops out-of-corpus questions | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 4. Chunk quality — no chunk split across documents | 100% of chunks | 88/88 | 88/88 | 88/88 | MET |
+| 5. Cited source is the correct source | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
 
-<!-- Underneath, paste the REAL output for each criterion from one of your
-     runs — the actual text your system produced, not a description of it.
-     Name the file and function that produced it. -->
+
+### Criterion 1 & 5 example — real output
+
+Produced by `run_eval.py`, saved to `results/run_2026-09-24_2146_before.md`
+
+**Question:** When can students declare a major, and is there a penalty or advantage to timing?
+- Sources retrieved: admin_add_drop_deadline.txt, admin_declaring_a_major.txt, admin_grade_appeals.txt, admin_graduation_requirements.txt, admin_pass_fail_option.txt
+
+> Students can declare a major at the end of their second semester, or later if needed.
+> There is no penalty for declaring late and no advantage to declaring early, except for
+> being assigned a departmental adviser (admin_declaring_a_major.txt).
+
+This is worth including because `scorer.py` flagged this question as "fail" in the run log
+above, but reading the actual output shows the fact was retrieved and correctly cited —
+scorer.py's pass/fail is checking something narrower than these five criteria.
+
+### Criterion 4 example — real output
+
+Produced by `app.py::index` (via `chunker.py::fallback_split`), run against the `campus_life` corpus.
+
+```
+python app.py index
+Corpus: campus_life
+  loaded   88 documents, 27,908 characters, ~317 characters per document
+  chunked  88 chunks, 317 characters on average (shortest 178, longest 549), produced by chunker.py::fallback_split
+  embedding 88 chunks (first run downloads the model)...
+  stored   88 chunks in 4.9s
+```
+
+88 documents in, 88 chunks out, longest chunk 549 characters — under the 800-character
+chunk_size limit — so no document was split across chunks.
 
 ## Verdicts
 

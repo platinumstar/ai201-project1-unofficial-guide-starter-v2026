@@ -52,7 +52,7 @@ in at least 4 of 5 tries.
 
 ---
 
-## 4. Something about your chunks
+## 4. The chunk quality — none split 
 
 100% of the 88 chunks are complete documents — none are split, since every document is under the 800-character chunk_size (average 317, longest 549).
 
