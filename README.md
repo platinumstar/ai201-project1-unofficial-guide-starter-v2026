@@ -231,11 +231,12 @@ chunk_size limit — so no document was split across chunks.
 
 | # | Criterion | Verdict | How I decided |
 |---|---|---|---|
-| 1 |  |  |  |
-| 2 |  |  |  |
-| 3 |  |  |  |
-| 4 |  |  |  |
-| 5 |  |  |  |
+| 1 | Retrieved chunk contains the answer | MET | Target was 4 of 5; all three runs came back 5/5 with no variance. Note: scorer.py flagged the major-declaring question as "fail," but manually reading the output showed the fact was present in the retrieved chunk and correctly cited — scorer.py checks something narrower than this criterion. |
+| 2 | Every answer names a source | MET | Target was 5 of 5; all three runs came back 5/5, every answer cited at least one file. |
+| 3 | Gate stops out-of-corpus questions | MET | Target was 4 of 5; the gate refused 5/5 out-of-scope questions, and this number doesn't vary between runs since retrieval and the cutoff comparison are deterministic. |
+| 4 | Chunk quality — no chunk split across documents | MET | Target was 100% of chunks; indexing produced 88 chunks from 88 documents with a longest chunk of 549 characters, under the 800-character limit, so no document was split. |
+| 5 | Cited source is the correct source | MET | Target was 4 of 5; checked each answer's cited file against where the fact actually lives in the corpus, and all 5 cited the correct source in all three runs. |
+
 
 ## Diagnoses
 
