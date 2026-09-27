@@ -237,26 +237,24 @@ chunk_size limit — so no document was split across chunks.
 | 4 | Chunk quality — no chunk split across documents | MET | Target was 100% of chunks; indexing produced 88 chunks from 88 documents with a longest chunk of 549 characters, under the 800-character limit, so no document was split. |
 | 5 | Cited source is the correct source | MET | Target was 4 of 5; checked each answer's cited file against where the fact actually lives in the corpus, and all 5 cited the correct source in all three runs. |
 
-
 ## Diagnoses
 
-<!-- For each miss: which stage caused it, and how. The stage alone isn't
-     enough — you need the mechanism.
+There was no MISS — all chunking and embedding stayed within range, and the
+LLM found the correct answer from the corpus in every run.
 
-     Not a diagnosis: "Question 3 didn't work."
-     A diagnosis:     "Question 3 asks about laundry costs. The answer is in
-                       one sentence that got split across two chunks, so
-                       neither chunk on its own contains it."
+Some of that is a small, clean corpus rather than proof the pipeline is
+bulletproof: 88 short documents, each on a distinct topic, with little overlap
+between them. A messier or larger corpus would stress retrieval and generation
+harder than mine did here.
 
-     The five stages: loading → chunking → embedding → retrieval → generation.
+The softest spot was criterion 1. My target was "4 of 5 retrieved chunks
+contain the answer," and I counted 5/5 — but scorer.py's automated check
+flagged the major-declaring question as a fail, and I only kept it as MET
+because I personally reread the output and judged the fact was present. That's
+my own judgment breaking a tie, not a clean pass. If I tightened this criterion,
+I'd change it to "5 of 5 pass scorer.py's automated check, with no manual
+override allowed" — removing myself as the tiebreaker.
 
-     Look for a pattern. If three misses all ask about numbers, that's one
-     problem, not three.
-
-     Missed nothing? Say so, then say honestly whether your targets were set
-     low, and which one you'd tighten and to what.
-
-     Milestone 3. -->
 
 ## The Improvement
 
