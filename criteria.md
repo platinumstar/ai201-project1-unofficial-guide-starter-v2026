@@ -27,6 +27,22 @@ When I ran my questions with ask  all my results 5 out of 5 came within the thre
 I kept the target at 4 of 5  because in campus life there are similar mentions of duplicates of the laundry in different documents. 
 Specifically laundry documents for different dorms. I noticed when I did not mentioned the building clearly I got the answer : I do not have enough information to answer your question because you did not specify which building's laundry facilities you are asking about.
 
+> **Revised in unit 2:** 
+> For at least 4 of 5 questions, `scorer.py`'s automated
+> check passes with no manual override — not just "I judged the fact was
+> present when I read the output."
+>
+> **Why revised:** 
+> In my before and after runs, `scorer.py` flagged the
+> major-declaring question as a fail in all three runs each time, but I still
+> counted it as passing because I personally reread the retrieved chunk and
+> the generated answer and judged the fact was there and correctly cited. That
+> means the criterion, as originally written, couldn't be measured the same
+> way twice — the automated check and my own read disagreed, and I broke the
+> tie myself rather than the target holding on its own. The revised version
+> removes me as the tiebreaker so the criterion is checkable without my
+> judgment filling the gap.
+
 ---
 
 ## 2. Every answer names a source
