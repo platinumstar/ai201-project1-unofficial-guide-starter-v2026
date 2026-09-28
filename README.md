@@ -259,11 +259,13 @@ override allowed" — removing myself as the tiebreaker.
 ## The Improvement
 
 **What I changed:**
+Added one rule to `GROUNDING_INSTRUCTION` in `generate.py:282`: "State the direct
+answer to the question in the first sentence, before any caveats or extra detail."
 
 **Why I picked it:**
-
-<!-- Connect it to a specific diagnosis above in one sentence. If you can't,
-     you picked a fix because it sounded impressive. -->
+My Milestone 3 diagnosis found the one soft spot was generation, not retrieval —
+scorer.py flagged the major-declaring answer as a fail even though the correct
+chunk was retrieved and cited, so I targeted how the answer is phrased.
 
 ### Run Log — After
 
@@ -272,20 +274,37 @@ override allowed" — removing myself as the tiebreaker.
 
 | Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
 |---|---|---|---|---|---|
-| 1. Retrieved chunk contains the answer | 4 of 5 |  |  |  |  |
-| 2. Every answer names a source | 5 of 5 |  |  |  |  |
-| 3. Gate stops out-of-corpus questions | 4 of 5 |  |  |  |  |
-| 4. | | | | | |
-| 5. | | | | | |
+| 1. Retrieved chunk contains the answer | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 2. Every answer names a source | 5 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 3. Gate stops out-of-corpus questions | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 4. Chunk quality — no chunk split across documents | 100% of chunks | 88/88 | 88/88 | 88/88 | MET |
+| 5. Cited source is the correct source | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
+
+### Criterion 1 & 5 example — real output (after)
+
+Produced by `run_eval.py`, saved to `results/run_2026-09-27_2244_after.md`
+
+**Question:** When can students declare a major, and is there a penalty or advantage to timing?
+- Sources retrieved: admin_add_drop_deadline.txt, admin_declaring_a_major.txt, admin_grade_appeals.txt, admin_graduation_requirements.txt, admin_pass_fail_option.txt
+
+> Students declare a major at the end of their second semester, or later if needed,
+> with no penalty for declaring late and no advantage to declaring early except for
+> being assigned a departmental adviser (admin_declaring_a_major.txt).
+
+Compare this to the before-example above: the fact is stated just as plainly, the
+same source is cited, and scorer.py still flags this question as "fail" in all
+three after-runs — identical to before. The prompt change didn't move this result,
+which supports the diagnosis that the mismatch lives in scorer.py's matching logic,
+not in how the answer is phrased.
 
 **Did it help?**
 
-<!-- Say plainly whether it did, and how you know. If it made things worse,
-     say that — a change that backfired, honestly reported, earns full credit
-     and is more interesting than one that worked. What matters is that you can
-     tell.
+No measurable difference. All five criteria landed on the identical numbers as
+the "before" run, and scorer.py still flags the major-declaring question as a
+fail in all three runs. This confirms the Milestone 3 diagnosis: the soft spot
+was scorer.py's exact-match scoring logic, not how the model phrases its
+answer — a prompt change can't fix a mismatch that lives in the scorer itself.
 
-     Milestone 4. -->
 
 ## What's Still Broken
 
