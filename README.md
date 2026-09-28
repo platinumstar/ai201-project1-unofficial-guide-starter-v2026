@@ -118,10 +118,14 @@ I ran all five in-scope questions and all five out-of-scope questions through re
 
 ## How I Used AI
 
+**1.** 
+I asked AI to explain each section of the milestone as if I were a beginner, so I could understand what each requirement meant before I started writing. It gave me clear explanations and examples. I changed my approach by using those explanations as a guide.
 
-**1.** I asked AI to explain each section of the milestone as if I were a beginner, so I could understand what each requirement meant before I started writing. It gave me clear explanations and examples. I changed my approach by using those explanations as a guide.
+**2.** 
+I used AI mainly to help me understand the retrieval workflow and interpret the search distances. I asked for explanations of how the relevance gate works and what the threshold should represent, then I used that guidance to compare in-scope and out-of-scope results. 
 
-**2.** I used AI mainly to help me understand the retrieval workflow and interpret the search distances. I asked for explanations of how the relevance gate works and what the threshold should represent, then I used that guidance to compare in-scope and out-of-scope results. 
+**3.** 
+I used AI to explain like before each section of Unit 2 and give me some ideas on narrowing down my tests to get the results. I also asked on the whether hybrid search would nake difference, but I found that that it was the scorer.py being strict on mismatch on one of the expectation. So I picked a smaller prompt change instead, which resulted in correct prediction as seen in after run result.
 
 <!-- ── Stretch features ─────────────────────────────────────────────────────
      Doing one? Say so here BEFORE you start. A feature this README never
@@ -220,15 +224,6 @@ chunk_size limit — so no document was split across chunks.
 
 ## Verdicts
 
-<!-- MET or MISSED for each of the five, against the target you wrote last
-     unit — not a new one. Plus a sentence on how you decided. That sentence
-     matters most where it was close.
-
-     If your target said 4 of 5 and your runs came out 4, 3, 4, that's a MISS.
-     The target has to hold, not show up occasionally.
-
-     Milestone 2. -->
-
 | # | Criterion | Verdict | How I decided |
 |---|---|---|---|
 | 1 | Retrieved chunk contains the answer | MET | Target was 4 of 5; all three runs came back 5/5 with no variance. Note: scorer.py flagged the major-declaring question as "fail," but manually reading the output showed the fact was present in the retrieved chunk and correctly cited — scorer.py checks something narrower than this criterion. |
@@ -269,9 +264,6 @@ chunk was retrieved and cited, so I targeted how the answer is phrased.
 
 ### Run Log — After
 
-<!-- Same format, same five criteria, three runs each.
-     `python run_eval.py --label after` -->
-
 | Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
 |---|---|---|---|---|---|
 | 1. Retrieved chunk contains the answer | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
@@ -308,17 +300,14 @@ answer — a prompt change can't fix a mismatch that lives in the scorer itself.
 
 ## What's Still Broken
 
-<!-- For each criterion still missed after your fix: what you'd do about it,
-     and why you stopped where you did.
-
-     "I ran out of time" is fine if it's true. Pretending nothing is left is
-     not.
-
-     Milestone 5. -->
+Nothing is MISSED, but scorer.py still disagrees with my own read on criterion 1's toughest question, even after the prompt change. I'd fix this next by rewriting scorer.py's matching logic to check for the fact's presence semantically rather than exact phrase match — I stopped here because that's a change to the test itself, not the system, and Milestone 4 asked me to change one thing in the system.
 
 ## What I'd Do Differently
 
-<!-- Knowing what you know now — which of your five criteria would you write
-     differently, and why?
+Criterion 1 is the one I'd write differently. My target was "4 of 5 retrieved
+chunks contain the answer," but I hit 5/5 only because I personally broke a tie
+that scorer.py called the other way. Next time I'd write it as "5 of 5 pass
+scorer.py's automated check, with no manual override allowed" from the start,
+instead of discovering after the fact that my own judgment was doing the
+tiebreaking work the target was supposed to measure on its own.
 
-     Milestone 5. -->
