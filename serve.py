@@ -28,12 +28,75 @@ this file stays the bare shell until then.
 """
 
 import os
+import re
+import threading
+import time
+from collections import defaultdict, deque
 
 from flask import Flask, jsonify, request
 
 import config
+import generate
+from obslog import log_event
 
 app = Flask(__name__)
+
+MAX_QUESTION_CHARS = 1000
+RATE_LIMIT_PER_MIN = 20
+app.config["MAX_CONTENT_LENGTH"] = 16 * 1024  # reject huge bodies outright
+
+# One request through the pipeline at a time: keeps the per-request token
+# count (a before/after difference of global totals) honest.
+_pipeline_lock = threading.Lock()
+_hits: dict[str, deque] = defaultdict(deque)
+
+
+def _ms(start: float) -> int:
+    return round((time.perf_counter() - start) * 1000)
+
+
+def _rate_limited(ip: str) -> bool:
+    """True if this client already made RATE_LIMIT_PER_MIN requests in the last minute."""
+    now = time.monotonic()
+    q = _hits[ip]
+    while q and now - q[0] > 60:
+        q.popleft()
+    if len(q) >= RATE_LIMIT_PER_MIN:
+        return True
+    q.append(now)
+    return False
+
+
+HINT = 'Send JSON with a question in it, like {"question": "is the housing lottery random?"}'
+
+
+def _reject(status: int, message: str, start: float, public: str | None = None, **extra):
+    """Log and return a JSON error. Every failure leaves a record."""
+    log_event(status=status, latency_ms=_ms(start), error=message, **extra)
+    return jsonify({"error": public or message}), status
+
+
+@app.errorhandler(404)
+def _not_found(_e):
+    return jsonify({"error": "not found"}), 404
+
+
+@app.errorhandler(405)
+def _bad_method(_e):
+    return jsonify({"error": "method not allowed"}), 405
+
+
+@app.errorhandler(413)
+def _too_big(_e):
+    log_event(status=413, error="request body too large")
+    return jsonify({"error": "request body too large"}), 413
+
+
+@app.errorhandler(Exception)
+def _unexpected(exc):
+    # Anything we didn't plan for: record the detail, tell the caller nothing.
+    log_event(status=500, error=f"unhandled {type(exc).__name__}: {exc}")
+    return jsonify({"error": "internal error"}), 500
 
 
 @app.get("/health")
@@ -72,25 +135,57 @@ def ask():
     `"refused": true` so whatever calls this can tell the two apart.
     """
     from app import ask_pipeline
+    start = time.perf_counter()
 
-    payload = request.get_json(silent=True) or {}
-    question = (payload.get("question") or "").strip()
+    if _rate_limited(request.remote_addr or "?"):
+        return _reject(429, "rate limit exceeded, try again in a minute", start)
+
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return _reject(400, "body must be a JSON object", start, public=HINT)
+
+    question = payload.get("question")
+    if not isinstance(question, str):
+        return _reject(400, "question must be a string", start, public=HINT)
+    question = question.strip()
 
     if not question:
-        return (
-            jsonify(
-                {
-                    "error": "Send JSON with a question in it, like "
-                    '{"question": "is the housing lottery random?"}'
-                }
-            ),
+        return _reject(400, "empty question", start, public=HINT)
+    if len(question) > MAX_QUESTION_CHARS:
+        return _reject(
             400,
+            f"question too long (max {MAX_QUESTION_CHARS} characters)",
+            start,
+            question=question[:200],
         )
 
-    try:
-        outcome = ask_pipeline(question, corpus=config.CORPUS)
-    except Exception as exc:  # noqa: BLE001 — a reader gets this, not a traceback
-        return jsonify({"error": f"{type(exc).__name__}: {exc}"}), 500
+    with _pipeline_lock:
+        tokens_before = generate.total_tokens()
+        try:
+            outcome = ask_pipeline(question, corpus=config.CORPUS)
+        except generate.QuotaGuard as exc:
+            log_event(status=503, latency_ms=_ms(start), question=question,
+                      error=f"QuotaGuard: {exc}")
+            return jsonify({"error": "service is over its request budget"}), 503
+        except Exception as exc:  # noqa: BLE001 — never leak a traceback
+            log_event(status=500, latency_ms=_ms(start), question=question,
+                      error=f"{type(exc).__name__}: {exc}")
+            return jsonify({"error": "internal error"}), 500
+        tokens_used = generate.total_tokens() - tokens_before
+
+    cited = sorted(set(re.findall(r"[\w\-]+\.txt", outcome["answer"])))
+    cited = [c for c in cited if c in outcome["sources"]]
+    log_event(
+        status=200,
+        latency_ms=_ms(start),
+        question=question,
+        answer=outcome["answer"],       
+        refused=outcome["refused"],
+        best_distance=round(outcome["best_distance"], 4),
+        sources=outcome["sources"],
+        cited=cited,
+        tokens=tokens_used,
+    )
 
     return jsonify(
         {

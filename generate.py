@@ -146,7 +146,13 @@ def _record_tokens(response) -> None:
         pass  # accounting never breaks the thing it is accounting for
 
 
+def total_tokens() -> int:
+    """Running token total this session. serve.py diffs it around a request."""
+    return _session_prompt_tokens + _session_output_tokens
+
+
 def usage() -> str:
+
     """One line on what this session has spent. Printed by app.py on exit."""
     tokens = ""
     total = _session_prompt_tokens + _session_output_tokens
