@@ -217,8 +217,85 @@ gunicorn serve:app                 # the way a host starts it
 > the first request after a quiet spell waits roughly a minute for it to wake
 > up. That's the tier, not your code.
 
-`serve.py` has **no logging and no timing in it on purpose** — building that is
-the unit 9 exercise, and it is easier to instrument something you wrote.
+`serve.py` shipped with **no logging and no timing in it on purpose** — building
+that is the unit 9 exercise. The capstone version below has both.
+
+---
+
+## Capstone run path (Path B: local, with logs)
+
+Runs on your own machine, started by one command, and writes a structured log
+of every request to `logs/requests.jsonl`.
+
+**Environment**
+
+| Need | Detail |
+|---|---|
+| Python | 3.11, 3.12 or 3.13 (not 3.14). Tested on 3.13 |
+| Dependencies | `requirements.txt`, pinned with lower and upper bounds |
+| Embedding model | `all-MiniLM-L6-v2`, about 80 MB, downloaded on the first index build and then cached. Runs locally |
+| Search index | `chroma_db/`, about 6 MB. Not in git, so you build it (step 4) |
+| API key | A Gemini key in `.env` as `GEMINI_API_KEY`. The only paid dependency, free at the course tier |
+
+**From a clean checkout** (macOS / Linux):
+
+```bash
+# 1. clone and enter the repo
+git clone <repo-url> && cd <repo-folder>
+
+# 2. environment
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# 3. API key
+cp .env.example .env              # then paste your key into .env
+
+# 4. build the search index (first run downloads the embedding model)
+python app.py index
+
+# 5. start the server (the single start command)
+PORT=5001 python serve.py
+```
+
+Port 5001 is used because macOS reserves 5000 for AirPlay Receiver. On other
+systems `python serve.py` serves on 5000. `PORT` overrides either.
+
+**Check that it works** (from a second terminal):
+
+```bash
+curl http://localhost:5001/health
+# {"corpus":"campus_life","detail":"ready","index_ready":true,"status":"ok"}
+
+curl -s -X POST http://localhost:5001/ask -H 'Content-Type: application/json' \
+  -d '{"question": "How many pages can I print per semester?"}'
+
+cat logs/requests.jsonl           # one JSON line per request
+```
+
+**What the server does with bad input** (each one is logged):
+
+| Request | Response |
+|---|---|
+| Empty or non-string `question`, or a body that is not a JSON object | 400 |
+| Question over 1000 characters | 400 |
+| Body over 16 KB | 413 |
+| More than 20 requests a minute from one address | 429 |
+| Session request budget exceeded (`config.py`) | 503 |
+| Anything unexpected | 500, with a generic message; the detail is in the log |
+
+**Notes**
+
+- Start the server from the repo root. The log path `logs/` is relative to where
+  you run it.
+- The response cache makes a repeated question return instantly and log
+  `"tokens": 0`. Use new questions, or `AI201_CACHE=0`, when measuring cost.
+- The server binds `0.0.0.0` (needed for a host, but it also exposes it to your
+  local network). It is Flask's development server; a lock in `serve.py` lets
+  one request at a time through the pipeline so per-request token counts stay
+  accurate.
+- `logs/` is gitignored. Log extracts that matter are committed under
+  `results/` and pasted into the README.
 
 ---
 

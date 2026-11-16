@@ -311,3 +311,62 @@ scorer.py's automated check, with no manual override allowed" from the start,
 instead of discovering after the fact that my own judgment was doing the
 tiebreaking work the target was supposed to measure on its own.
 
+## Capstone
+
+**What This Extends**
+...
+
+**The Shape**
+...
+
+**Running It**
+...
+
+**Instrumentation**
+
+Every request to `POST /ask` in `serve.py` writes one JSON line to `logs/requests.jsonl` through `obslog.log_event()` (`obslog.py`). Failures are logged too: a rejected input leaves a record with its status and an `error` field, so a failure never shows up only as an absence.
+
+Fields per record:
+
+| Field | Meaning |
+|---|---|
+| `ts` | Timestamp, local time, to the second |
+| `status` | HTTP status returned (200, 400, 413, 429, 500, 503) |
+| `latency_ms` | Time from the start of `ask()` to the response |
+| `question` | What came in |
+| `answer` | What went out (truncated to 2000 characters in the log) |
+| `refused` | `true` if the retrieval gate refused (no model call) |
+| `best_distance` | Distance of the closest retrieved chunk (gate threshold is 0.6) |
+| `sources` | Every file the retriever returned |
+| `cited` | Files named in the answer text, limited to `sources` |
+| `tokens` | Tokens spent by this request (0 for a refusal or a cache hit) |
+| `error` | Reason, on failed requests |
+
+Entries from a real session (14 lines, copied as text from `logs/requests.jsonl`). Lines 3 and 14 are failed requests (400); line 2 is a gate refusal; line 1 is a cache hit, so `tokens` is 0.
+
+```
+{"ts": "2026-11-15T23:38:16", "status": 200, "latency_ms": 949, "question": "Which parking lots can students buy permits for, and is there a waitlist?", "answer": "Students can buy permits for the west and east lots, and there is no waitlist (admin_parking_permits.txt).", "refused": false, "best_distance": 0.3733, "sources": ["admin_parking_permits.txt", "advising_registration.txt", "dining_verrill_street_grill.txt", "money_textbooks.txt", "transit_shuttle.txt"], "cited": ["admin_parking_permits.txt"], "tokens": 0}
+{"ts": "2026-11-15T23:38:16", "status": 200, "latency_ms": 48, "question": "What is the capital of Mongolia?", "answer": "I don't have enough information about that.", "refused": true, "best_distance": 0.8246, "sources": [], "cited": [], "tokens": 0}
+{"ts": "2026-11-15T23:38:16", "status": 400, "latency_ms": 0, "error": "empty question"}
+{"ts": "2026-11-15T23:44:59", "status": 200, "latency_ms": 1691, "question": "How many pages can I print per semester?", "answer": "You can print roughly 600 black-and-white pages per semester (admin_printing_quota.txt).", "refused": false, "best_distance": 0.3171, "sources": ["admin_graduation_requirements.txt", "admin_printing_quota.txt", "course_cs_340.txt", "course_engl_205.txt", "money_textbooks.txt"], "cited": ["admin_printing_quota.txt"], "tokens": 628}
+{"ts": "2026-11-15T23:45:02", "status": 200, "latency_ms": 671, "question": "How do I connect to campus Wi-Fi?", "answer": "I do not have enough information to answer how to connect to campus Wi-Fi from the provided documents.\n\nSource: admin_wifi_and_accounts.txt", "refused": false, "best_distance": 0.5978, "sources": ["admin_add_drop_deadline.txt", "admin_wifi_and_accounts.txt", "dining_the_ridgeway_cafe.txt", "dining_verrill_street_grill.txt", "money_textbooks.txt"], "cited": ["admin_wifi_and_accounts.txt"], "tokens": 674}
+{"ts": "2026-11-15T23:45:06", "status": 200, "latency_ms": 856, "question": "When does the campus shuttle run?", "answer": "The campus shuttle runs a loop every 20 minutes from 7am to 11pm on weekdays and every 40 minutes on weekends, according to `transit_shuttle.txt`.", "refused": false, "best_distance": 0.4021, "sources": ["dining_halden_hall_followup.txt", "dining_kestrel_commons_followup.txt", "dining_the_ridgeway_cafe_followup.txt", "transit_shuttle.txt", "transit_walking.txt"], "cited": ["transit_shuttle.txt"], "tokens": 719}
+{"ts": "2026-11-15T23:45:10", "status": 200, "latency_ms": 755, "question": "Where can I find cheap textbooks?", "answer": "You can find textbooks without paying full price by using the library's two-hour reserve copy or by asking the campus store to price-match another listing shown on your phone. This information comes from money_textbooks.txt.", "refused": false, "best_distance": 0.2963, "sources": ["admin_library_holds.txt", "admin_printing_quota.txt", "course_math_220.txt", "money_textbooks.txt", "study_group_rooms.txt"], "cited": ["money_textbooks.txt"], "tokens": 607}
+{"ts": "2026-11-15T23:45:14", "status": 200, "latency_ms": 632, "question": "What on-campus jobs are available to students?", "answer": "The documents mention library and dining jobs as available on-campus work ([money_jobs.txt]).", "refused": false, "best_distance": 0.4953, "sources": ["admin_campus_jobs_and_financial_aid.txt", "admin_wifi_and_accounts.txt", "dining_verrill_street_grill.txt", "money_jobs.txt", "money_textbooks.txt"], "cited": ["money_jobs.txt"], "tokens": 620}
+{"ts": "2026-11-15T23:45:17", "status": 200, "latency_ms": 693, "question": "When does course registration open?", "answer": "Based on the provided documents, registration times are staggered by credit hours. \n\nSource: advising_registration.txt", "refused": false, "best_distance": 0.416, "sources": ["admin_add_drop_deadline.txt", "admin_study_abroad.txt", "advising_registration.txt", "dining_north_kitchen_followup.txt", "dining_verrill_street_grill_followup.txt"], "cited": ["advising_registration.txt"], "tokens": 575}
+{"ts": "2026-11-15T23:45:21", "status": 200, "latency_ms": 597, "question": "What are the hours for the Verrill Street Grill?", "answer": "The hours for the Verrill Street Grill are 11:00am to 1:00am daily during term, according to dining_verrill_street_grill.txt.", "refused": false, "best_distance": 0.2779, "sources": ["dining_halden_hall.txt", "dining_kestrel_commons.txt", "dining_north_kitchen.txt", "dining_verrill_street_grill.txt", "dining_verrill_street_grill_followup.txt"], "cited": ["dining_verrill_street_grill.txt"], "tokens": 800}
+{"ts": "2026-11-15T23:45:25", "status": 200, "latency_ms": 615, "question": "How many credits do I need to graduate?", "answer": "You need 120 credit hours to graduate. This information comes from admin_graduation_requirements.txt.", "refused": false, "best_distance": 0.3033, "sources": ["admin_add_drop_deadline.txt", "admin_declaring_a_major.txt", "admin_graduation_requirements.txt", "admin_pass_fail_option.txt", "course_engl_205.txt"], "cited": ["admin_graduation_requirements.txt"], "tokens": 579}
+{"ts": "2026-11-15T23:45:28", "status": 200, "latency_ms": 696, "question": "Which dorm is Morrow House?", "answer": "I do not have enough information to state which dorm is Morrow House, as the documents only provide descriptions and details *about* Morrow House rather than its classification as a dorm. \n\nSources: housing_morrow_house.txt, housing_morrow_house_laundry.txt, housing_morrow_house_noise.txt", "refused": false, "best_distance": 0.3608, "sources": ["housing_aldridge_hall.txt", "housing_morrow_house.txt", "housing_morrow_house_laundry.txt", "housing_morrow_house_noise.txt", "housing_tamsin_court.txt"], "cited": ["housing_morrow_house.txt", "housing_morrow_house_laundry.txt", "housing_morrow_house_noise.txt"], "tokens": 755}
+{"ts": "2026-11-15T23:45:32", "status": 200, "latency_ms": 612, "question": "What does a parking permit cost?", "answer": "I do not have enough information to answer what a parking permit costs. \n\nSource: admin_parking_permits.txt", "refused": false, "best_distance": 0.555, "sources": ["admin_parking_permits.txt", "admin_printing_quota.txt", "housing_calder_annexe.txt", "housing_fenwick_court.txt", "housing_innisfree_hall.txt"], "cited": ["admin_parking_permits.txt"], "tokens": 722}
+{"ts": "2026-11-15T23:53:08", "status": 400, "latency_ms": 0, "error": "question must be a string"}
+```
+
+What the log shows: `sources` is what was retrieved, `cited` is what the answer named. For "Which parking lots..." the retriever returned five files and the answer used one. Three of the ten fresh answers (Wi-Fi, Morrow House dorm, parking cost) say "I do not have enough information" while `refused` is `false`: the gate passed them and the model declined in text, so `refused` does not capture that case.
+
+**What It Costs**
+
+Measured cost: **about 668 tokens per answered request** (mean of 667.9; range 575 to 800).
+
+How I measured it: I asked ten questions that had never been asked before, so none could be served from the response cache (cached answers log 0 tokens and would understate the cost). `serve.py` records `tokens` for each request as the difference in `generate.py`'s running token total (prompt plus output) before and after the pipeline call; a lock keeps requests from overlapping so the difference is attributable to one request. I averaged the `tokens` of the ten answered lines (lines 4 to 13 above). Refusals cost 0 because Gemini is never called. Median latency for these runs was 693 ms (mean 782 ms; the 1691 ms maximum was the first request, which loads the index).
+
+For 100 people a day: 100 requests x 668 tokens = 66,800 tokens a day, about 2.0 million tokens a month. At ten questions each it is 668,000 a day. To convert to money, multiply by the model's published price per million tokens: (66,800 / 1,000,000) x price. [fill in: model and price you used, or leave tokens as the stated cost]
