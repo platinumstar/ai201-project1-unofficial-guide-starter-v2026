@@ -127,9 +127,6 @@ I used AI mainly to help me understand the retrieval workflow and interpret the 
 **3.** 
 I used AI to explain like before each section of Unit 2 and give me some ideas on narrowing down my tests to get the results. I also asked on the whether hybrid search would make difference, but I found that that it was the scorer.py being strict on mismatch on one of the expectation. So I picked a smaller prompt change instead, which resulted in correct prediction as seen in after run result.
 
-**4.** 
-For the capstone I used Claude Code to explain how to add structured logging (`obslog.py`), harden `serve.py` (input validation, rate limit, failures logged), and completed the Instrumentation and cost sections. I checked real log: I ran ten fresh questions myself, confirmed the token and latency numbers from the log lines (which caught a median latency I had stated wrongly, 693 ms instead of 682 ms), and noticed the log cannot split input from output tokens, so I report the cost as a range instead of a single figure.
-
 ---
 
 # Unit 2
@@ -322,6 +319,11 @@ Shape A, deploy and instrument. I am adding the operational layer: a documented
 run path, a structured log that records failures as well as successes, and a
 measured cost per run.
 
+Out of scope: I am not adding a second retriever or changing the chunker, the
+retriever, the relevance gate or the generator; I am not hosting it (Path B,
+local only); and I am not building an interface beyond the `POST /ask` and
+`GET /health` endpoints.
+
 
 **Running It**
 
@@ -380,7 +382,7 @@ For 100 people a day: 100 requests x 668 tokens = 66,800 tokens a day, about 2.0
 
 **Run Log and Verdicts**
 
-Method: `python tools/measure.py` sent 30 requests per trial through `serve.py` (10 bad inputs, 10 unrelated questions, 10 answerable questions), three trials, each with an empty response cache so the model was really called again. Raw output is in `results/capstone_trial_1.json` to `_3.json`. The criteria are in `criteria.md`, committed before these runs.
+Method: `python tools/measure.py` sent 30 requests per trial through `serve.py` (10 bad inputs, 10 unrelated questions, 10 answerable questions), three trials, each with an empty response cache so the model was really called again. Raw output is in `results/capstone_trial_1.json` to `_3.json`. The criteria are in `criteria.md`, committed before these runs (commit `7f28a08`, "add capstone criteria"; the first commit carrying run output is "capstone run log before fix: 3 trials, 5 criteria"). Two earlier commits, `d2b3ac4` and `cdc1575`, saved a before-and-after of the logging change itself (`results/capstone_before.md`, `capstone_after.md`); they are not trial results and none of the five criteria were scored from them.
 
 | Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
 |---|---|---|---|---|---|
@@ -400,6 +402,11 @@ Criterion 1, a bad request (`serve.py::_reject`):
 Criterion 2, an unrelated question refused by the gate (`gate.py`, logged by `ask()`):
 ```
 {"ts": "2026-11-16T22:07:51", "status": 200, "latency_ms": 54, "question": "What is the capital of Mongolia?", "answer": "I don't have enough information about that.", "refused": true, "best_distance": 0.8246, "sources": [], "cited": [], "tokens": 0}
+```
+
+Criterion 3, a complete record for every request (`obslog.py::log_event`, called from `serve.py::ask()`). Trial 2 sent 30 requests and `results/capstone_trial_2.json` holds 30 new log records for them, in order: 19 with status 200, 10 with status 400, and 1 with status 500. Every record has `ts`, `status` and `latency_ms`, and every 200 record also has `question`, `answer` and `tokens`. One of the 200 records:
+```
+{"ts": "2026-11-16T22:07:52", "status": 200, "latency_ms": 46, "question": "Who won the 1994 World Cup?", "answer": "I don't have enough information about that.", "refused": true, "best_distance": 0.8859, "sources": [], "cited": [], "tokens": 0}
 ```
 
 Criterion 4, a correct citation:
