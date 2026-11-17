@@ -125,7 +125,7 @@ I asked AI to explain each section of the milestone as if I were a beginner, so 
 I used AI mainly to help me understand the retrieval workflow and interpret the search distances. I asked for explanations of how the relevance gate works and what the threshold should represent, then I used that guidance to compare in-scope and out-of-scope results. 
 
 **3.** 
-I used AI to explain like before each section of Unit 2 and give me some ideas on narrowing down my tests to get the results. I also asked on the whether hybrid search would nake difference, but I found that that it was the scorer.py being strict on mismatch on one of the expectation. So I picked a smaller prompt change instead, which resulted in correct prediction as seen in after run result.
+I used AI to explain like before each section of Unit 2 and give me some ideas on narrowing down my tests to get the results. I also asked on the whether hybrid search would make difference, but I found that that it was the scorer.py being strict on mismatch on one of the expectation. So I picked a smaller prompt change instead, which resulted in correct prediction as seen in after run result.
 
 **4.** 
 For the capstone I used Claude Code to explain how to add structured logging (`obslog.py`), harden `serve.py` (input validation, rate limit, failures logged), and completed the Instrumentation and cost sections. I checked real log: I ran ten fresh questions myself, confirmed the token and latency numbers from the log lines (which caught a median latency I had stated wrongly, 693 ms instead of 682 ms), and noticed the log cannot split input from output tokens, so I report the cost as a range instead of a single figure.
@@ -386,3 +386,44 @@ Measured cost: **about 668 tokens per answered request** (mean of 667.9; range 5
 How I measured it: I asked ten questions that had never been asked before, so none could be served from the response cache (cached answers log 0 tokens and would understate the cost). `serve.py` records `tokens` for each request as the difference in `generate.py`'s running token total (prompt plus output) before and after the pipeline call; a lock keeps requests from overlapping so the difference is attributable to one request. I averaged the `tokens` of the ten answered lines (lines 4 to 13 above). Refusals cost 0 because Gemini is never called. Median latency for these runs was 682 ms (mean 782 ms; the 1691 ms maximum was the first request, which loads the index).
 
 For 100 people a day: 100 requests x 668 tokens = 66,800 tokens a day, about 2.0 million tokens a month. At ten questions each it is 668,000 a day. In money, for `gemini-3.5-flash-lite` at $0.30 per million input tokens and $2.50 per million output tokens (no caching): the log's `tokens` field is prompt plus output combined, so I price it as a range. If all 668 tokens were input, a request costs about $0.0002, which is $0.02 a day and $0.60 a month for 100 requests a day. If all 668 were output (a ceiling, since these prompts are mostly retrieved context), it is about $0.0017 a request, $0.17 a day and $5.01 a month. The real figure falls between those, much nearer the low end. At ten questions each (668,000 tokens a day) the ceiling is about $1.67 a day, about $50 a month.
+
+**Run Log and Verdicts**
+
+Method: `python tools/measure.py` sent 30 requests per trial through `serve.py` (10 bad inputs, 10 unrelated questions, 10 answerable questions), three trials, each with an empty response cache so the model was really called again. Raw output is in `results/capstone_trial_1.json` to `_3.json`. The criteria are in `criteria.md`, committed before these runs.
+
+| Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
+|---|---|---|---|---|---|
+| 1. Bad input gets a 4xx and a log line | 10 of 10 | 10/10 | 10/10 | 10/10 | MET |
+| 2. Unrelated questions are refused | 10 of 10 | 10/10 | 10/10 | 10/10 | MET |
+| 3. Every request leaves a complete log record | 30 of 30 | 30/30 | 30/30 | 30/30 | MET |
+| 4. `cited` names the file that holds the answer | 9 of 10 | 10/10 | 9/10 | 9/10 | MET |
+| 5. Answered request under 1,000 tokens and 2,000 ms | 9 of 10 | 5/10 | 6/10 | 6/10 | MISSED |
+
+Real output from trial 2 (`logs/requests.jsonl`, written by `obslog.log_event()` called from `ask()` in `serve.py`). Long fields are cut and marked.
+
+Criterion 1, a bad request (`serve.py::_reject`):
+```
+{"ts": "2026-11-16T22:07:51", "status": 400, "latency_ms": 0, "error": "empty question"}
+```
+
+Criterion 2, an unrelated question refused by the gate (`gate.py`, logged by `ask()`):
+```
+{"ts": "2026-11-16T22:07:51", "status": 200, "latency_ms": 54, "question": "What is the capital of Mongolia?", "answer": "I don't have enough information about that.", "refused": true, "best_distance": 0.8246, "sources": [], "cited": [], "tokens": 0}
+```
+
+Criterion 4, a correct citation:
+```
+{"ts": "2026-11-16T22:07:53", "status": 200, "latency_ms": 882, "question": "Which parking lots can students buy permits for, and is there a waitlist?", "answer": "Students can buy permits for the west and east lots, and there is no waitlist (admin_parking_permits.txt).", "refused": false, "best_distance": 0.3733, "sources": ["admin_parking_permits.txt", "advising_registration.txt", "dining_verrill_street_grill.txt", "money_textbooks.txt", "transit_shuttle.txt"], "cited": ["admin_parking_permits.txt"], "tokens": 654}
+```
+
+Criterion 5, a slow answer and the failed request (`generate.py::generate`, the retry loop):
+```
+{"ts": "2026-11-16T22:07:58", "status": 200, "latency_ms": 2866, "question": "What are the quiet floors in Aldridge Hall?", "answer": "The quiet floors in Aldridge Hall are floors 3 and 4 (housing_aldridge_hall.txt and housing_aldridge_hall_noise.txt).", "refused": false, "best_distance": 0.3459, "sources": ["housing_aldridge_hall.txt", "housing_aldridge_hall_noise.txt", "housing_innisfree_hall_noise.txt", "housing_old_brewhouse_noise.txt", "housing_tamsin_court_noise.txt"], "cited": ["housing_aldridge_hall.txt", "housing_aldridge_hall_noise.txt"], "tokens": 641}
+{"ts": "2026-11-16T22:08:21", "status": 500, "latency_ms": 15494, "question": "What are the hours for the Verrill Street Grill?", "error": "RuntimeError: Still rate limited after 4 attempts. Wait a minute and try again - your key is fine.\nLast error: 429 RESOURCE_EXHAUSTED. [...truncated]"}
+```
+
+Diagnosis of criterion 5: this is a latency miss, not a token miss. Every answered request that returned used 561 to 800 tokens, under the 1,000 limit. The latency misses were 5, 4 and 4 requests over 2,000 ms per trial, ranging from 2.1 s to 15.5 s. The stage is the generator's rate-limit handling in `generate.py`. The mechanism: the Gemini free tier for `gemini-3.5-flash-lite` allows 15 requests per minute (the 429 message says `limit: 15`), but `config.REQUESTS_PER_MINUTE` is 30, so the local pacer lets calls through until Gemini rejects them. The retry loop then backs off 1, 2, 4 and 8 seconds, and the stderr output shows the pacer's own waits as well. Ten model calls per trial, run back to back, are enough to exceed 15 in a minute.
+
+Criterion 4's one miss (trial 2, 9/10) is the same cause, not a citation failure: the Verrill Street Grill request exhausted its four retries and returned a 500, so it had no `cited` field at all. That is one problem (a pacer set at twice the real quota) with two symptoms: slow answers and one failed request. One caveat: my harness ran the three trials with no pause between them, so it created more load than one student would. A real user sending bursts on the free tier would still hit the same wall, but not as often.
+
+Criteria 1, 2 and 3 were MET in all nine runs. I set 10 of 10 and 30 of 30 on purpose, since bad input and the log involve no model randomness, and they held.
