@@ -127,6 +127,9 @@ I used AI mainly to help me understand the retrieval workflow and interpret the 
 **3.** 
 I used AI to explain like before each section of Unit 2 and give me some ideas on narrowing down my tests to get the results. I also asked on the whether hybrid search would nake difference, but I found that that it was the scorer.py being strict on mismatch on one of the expectation. So I picked a smaller prompt change instead, which resulted in correct prediction as seen in after run result.
 
+**4.** 
+For the capstone I used Claude Code to explain how to add structured logging (`obslog.py`), harden `serve.py` (input validation, rate limit, failures logged), and completed the Instrumentation and cost sections. I checked real log: I ran ten fresh questions myself, confirmed the token and latency numbers from the log lines (which caught a median latency I had stated wrongly, 693 ms instead of 682 ms), and noticed the log cannot split input from output tokens, so I report the cost as a range instead of a single figure.
+
 <!-- ── Stretch features ─────────────────────────────────────────────────────
      Doing one? Say so here BEFORE you start. A feature this README never
      claims earns nothing.
@@ -314,13 +317,26 @@ tiebreaking work the target was supposed to measure on its own.
 ## Capstone
 
 **What This Extends**
-...
+
+Project 1, The Unofficial Guide: a RAG system over the campus_life corpus (88
+documents). New in this unit: `serve.py` runs the existing pipeline as an HTTP
+service (`POST /ask`, `GET /health`) with input validation, a per-address rate
+limit, and a structured log of every request (`obslog.py` -> `logs/requests.jsonl`).
+The chunker, retriever, gate and generator are unchanged.
+
 
 **The Shape**
-...
+
+Shape A, deploy and instrument. I am adding the operational layer: a documented
+run path, a structured log that records failures as well as successes, and a
+measured cost per run.
+
 
 **Running It**
-...
+
+Path B, local with logs. Start command, environment and the failure table
+are in RUNNING.md under "Capstone run path". A real session's log is pasted under
+Instrumentation below.
 
 **Instrumentation**
 
@@ -367,6 +383,6 @@ What the log shows: `sources` is what was retrieved, `cited` is what the answer 
 
 Measured cost: **about 668 tokens per answered request** (mean of 667.9; range 575 to 800).
 
-How I measured it: I asked ten questions that had never been asked before, so none could be served from the response cache (cached answers log 0 tokens and would understate the cost). `serve.py` records `tokens` for each request as the difference in `generate.py`'s running token total (prompt plus output) before and after the pipeline call; a lock keeps requests from overlapping so the difference is attributable to one request. I averaged the `tokens` of the ten answered lines (lines 4 to 13 above). Refusals cost 0 because Gemini is never called. Median latency for these runs was 693 ms (mean 782 ms; the 1691 ms maximum was the first request, which loads the index).
+How I measured it: I asked ten questions that had never been asked before, so none could be served from the response cache (cached answers log 0 tokens and would understate the cost). `serve.py` records `tokens` for each request as the difference in `generate.py`'s running token total (prompt plus output) before and after the pipeline call; a lock keeps requests from overlapping so the difference is attributable to one request. I averaged the `tokens` of the ten answered lines (lines 4 to 13 above). Refusals cost 0 because Gemini is never called. Median latency for these runs was 682 ms (mean 782 ms; the 1691 ms maximum was the first request, which loads the index).
 
-For 100 people a day: 100 requests x 668 tokens = 66,800 tokens a day, about 2.0 million tokens a month. At ten questions each it is 668,000 a day. To convert to money, multiply by the model's published price per million tokens: (66,800 / 1,000,000) x price. [fill in: model and price you used, or leave tokens as the stated cost]
+For 100 people a day: 100 requests x 668 tokens = 66,800 tokens a day, about 2.0 million tokens a month. At ten questions each it is 668,000 a day. In money, for `gemini-3.5-flash-lite` at $0.30 per million input tokens and $2.50 per million output tokens (no caching): the log's `tokens` field is prompt plus output combined, so I price it as a range. If all 668 tokens were input, a request costs about $0.0002, which is $0.02 a day and $0.60 a month for 100 requests a day. If all 668 were output (a ceiling, since these prompts are mostly retrieved context), it is about $0.0017 a request, $0.17 a day and $5.01 a month. The real figure falls between those, much nearer the low end. At ten questions each (668,000 tokens a day) the ceiling is about $1.67 a day, about $50 a month.
