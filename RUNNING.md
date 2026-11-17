@@ -234,7 +234,7 @@ of every request to `logs/requests.jsonl`.
 | Python | 3.11, 3.12 or 3.13 (not 3.14). Tested on 3.13 |
 | Dependencies | `requirements.txt`, pinned with lower and upper bounds |
 | Embedding model | `all-MiniLM-L6-v2`, about 80 MB, downloaded on the first index build and then cached. Runs locally |
-| Search index | `chroma_db/`, about 6 MB. Not in git, so you build it (step 4) |
+| Search index | `chroma_db/`, about 3 to 6 MB. Not in git, so you build it (step 4) |
 | API key | A Gemini key in `.env` as `GEMINI_API_KEY`. The only paid dependency, free at the course tier |
 
 **From a clean checkout** (macOS / Linux):

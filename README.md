@@ -331,6 +331,11 @@ Path B, local with logs. Start command, environment and the failure table
 are in RUNNING.md under "Capstone run path". A real session's log is pasted under
 Instrumentation below.
 
+Tested from a clean clone on Python 3.13: creating the environment, installing
+`requirements.txt`, building the index (88 chunks) and starting `serve.py` all
+worked as written in RUNNING.md, and a real question and a bad request both
+appeared in `logs/requests.jsonl`.
+
 **Instrumentation**
 
 Every request to `POST /ask` in `serve.py` writes one JSON line to `logs/requests.jsonl` through `obslog.log_event()` (`obslog.py`). Failures are logged too: a rejected input leaves a record with its status and an `error` field, so a failure never shows up only as an absence.
