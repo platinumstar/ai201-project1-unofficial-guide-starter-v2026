@@ -91,11 +91,11 @@ without reading what came before or after?
 How many washers and dryers are in Fenwick Court, and how much does laundry cost?
 
 **Answer:**
-Fenwick Court has eight washers and eight dryers, and laundry costs $1.75 per wash and $1.75 per dry.
+Fenwick Court has eight washers and six dryers, and laundry costs $2.00 to wash and $1.75 to dry (housing_fenwick_court_laundry.txt and housing_fenwick_court.txt).
 
 ```
-[from housing_innisfree_hall.txt]
-Laundry costs $1.75 wash, $1.75 dry, app-based. On noise: moderate; the building is L-shaped and the short wing is much quieter.
+[from housing_fenwick_court_laundry.txt]
+Machines take $2.00 wash, $1.75 dry, app-based. There are eight washers and six dryers for the building, which is the wrong ratio and means the dryers back up on Sunday evenings.
 ```
 
 **My relevance cutoff:**
@@ -130,18 +130,9 @@ I used AI to explain like before each section of Unit 2 and give me some ideas o
 **4.** 
 For the capstone I used Claude Code to explain how to add structured logging (`obslog.py`), harden `serve.py` (input validation, rate limit, failures logged), and completed the Instrumentation and cost sections. I checked real log: I ran ten fresh questions myself, confirmed the token and latency numbers from the log lines (which caught a median latency I had stated wrongly, 693 ms instead of 682 ms), and noticed the log cannot split input from output tokens, so I report the cost as a range instead of a single figure.
 
-<!-- ── Stretch features ─────────────────────────────────────────────────────
-     Doing one? Say so here BEFORE you start. A feature this README never
-     claims earns nothing.
-     ───────────────────────────────────────────────────────────────────────── -->
-
 ---
 
 # Unit 2
-
-<!-- These sections get ADDED to what's already above. Don't delete or rewrite
-     unit 1 — the point is that someone can see what you said before you knew
-     how it went. -->
 
 ## Run Log — Before
 
