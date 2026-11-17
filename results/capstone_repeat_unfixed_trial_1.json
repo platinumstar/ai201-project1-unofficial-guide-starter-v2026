@@ -1,0 +1,420 @@
+{
+  "trial": 1,
+  "c1": 10,
+  "c2": 10,
+  "c3": 30,
+  "c3_total": 30,
+  "c3_lines_match": true,
+  "c4": 9,
+  "c5": 9,
+  "answered_tokens": [
+    654,
+    571,
+    641,
+    679,
+    637,
+    714,
+    619,
+    798,
+    575,
+    621
+  ],
+  "answered_latency_ms": [
+    3643,
+    1511,
+    648,
+    1370,
+    1210,
+    892,
+    880,
+    651,
+    615,
+    612
+  ],
+  "new_log_lines": [
+    {
+      "ts": "2026-11-16T22:32:39",
+      "status": 400,
+      "latency_ms": 0,
+      "error": "empty question"
+    },
+    {
+      "ts": "2026-11-16T22:32:39",
+      "status": 400,
+      "latency_ms": 0,
+      "error": "empty question"
+    },
+    {
+      "ts": "2026-11-16T22:32:39",
+      "status": 400,
+      "latency_ms": 0,
+      "error": "question must be a string"
+    },
+    {
+      "ts": "2026-11-16T22:32:39",
+      "status": 400,
+      "latency_ms": 0,
+      "error": "question must be a string"
+    },
+    {
+      "ts": "2026-11-16T22:32:39",
+      "status": 400,
+      "latency_ms": 0,
+      "error": "question too long (max 1000 characters)",
+      "question": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "ts": "2026-11-16T22:32:39",
+      "status": 400,
+      "latency_ms": 0,
+      "error": "question too long (max 1000 characters)",
+      "question": "why why why why why why why why why why why why why why why why why why why why why why why why why why why why why why why why why why why why why why why why why why why why why why why why why why "
+    },
+    {
+      "ts": "2026-11-16T22:32:39",
+      "status": 400,
+      "latency_ms": 0,
+      "error": "body must be a JSON object"
+    },
+    {
+      "ts": "2026-11-16T22:32:39",
+      "status": 400,
+      "latency_ms": 0,
+      "error": "body must be a JSON object"
+    },
+    {
+      "ts": "2026-11-16T22:32:39",
+      "status": 400,
+      "latency_ms": 0,
+      "error": "question must be a string"
+    },
+    {
+      "ts": "2026-11-16T22:32:39",
+      "status": 400,
+      "latency_ms": 0,
+      "error": "question must be a string"
+    },
+    {
+      "ts": "2026-11-16T22:32:43",
+      "status": 200,
+      "latency_ms": 3969,
+      "question": "What is the capital of Mongolia?",
+      "answer": "I don't have enough information about that.",
+      "refused": true,
+      "best_distance": 0.8246,
+      "sources": [],
+      "cited": [],
+      "tokens": 0
+    },
+    {
+      "ts": "2026-11-16T22:32:43",
+      "status": 200,
+      "latency_ms": 144,
+      "question": "Who won the 1994 World Cup?",
+      "answer": "I don't have enough information about that.",
+      "refused": true,
+      "best_distance": 0.8859,
+      "sources": [],
+      "cited": [],
+      "tokens": 0
+    },
+    {
+      "ts": "2026-11-16T22:32:43",
+      "status": 200,
+      "latency_ms": 126,
+      "question": "What is the recommended dosage of ibuprofen for a headache?",
+      "answer": "I don't have enough information about that.",
+      "refused": true,
+      "best_distance": 0.8442,
+      "sources": [],
+      "cited": [],
+      "tokens": 0
+    },
+    {
+      "ts": "2026-11-16T22:32:43",
+      "status": 200,
+      "latency_ms": 130,
+      "question": "How do I write a for loop in Rust?",
+      "answer": "I don't have enough information about that.",
+      "refused": true,
+      "best_distance": 0.896,
+      "sources": [],
+      "cited": [],
+      "tokens": 0
+    },
+    {
+      "ts": "2026-11-16T22:32:43",
+      "status": 200,
+      "latency_ms": 139,
+      "question": "How tall is Mount Everest?",
+      "answer": "I don't have enough information about that.",
+      "refused": true,
+      "best_distance": 0.8018,
+      "sources": [],
+      "cited": [],
+      "tokens": 0
+    },
+    {
+      "ts": "2026-11-16T22:32:43",
+      "status": 200,
+      "latency_ms": 131,
+      "question": "What is the boiling point of mercury?",
+      "answer": "I don't have enough information about that.",
+      "refused": true,
+      "best_distance": 0.8067,
+      "sources": [],
+      "cited": [],
+      "tokens": 0
+    },
+    {
+      "ts": "2026-11-16T22:32:43",
+      "status": 200,
+      "latency_ms": 124,
+      "question": "Who painted the Mona Lisa?",
+      "answer": "I don't have enough information about that.",
+      "refused": true,
+      "best_distance": 0.7791,
+      "sources": [],
+      "cited": [],
+      "tokens": 0
+    },
+    {
+      "ts": "2026-11-16T22:32:43",
+      "status": 200,
+      "latency_ms": 124,
+      "question": "How do I bake sourdough bread?",
+      "answer": "I don't have enough information about that.",
+      "refused": true,
+      "best_distance": 0.8295,
+      "sources": [],
+      "cited": [],
+      "tokens": 0
+    },
+    {
+      "ts": "2026-11-16T22:32:44",
+      "status": 200,
+      "latency_ms": 128,
+      "question": "What is the current price of Bitcoin?",
+      "answer": "I don't have enough information about that.",
+      "refused": true,
+      "best_distance": 0.8025,
+      "sources": [],
+      "cited": [],
+      "tokens": 0
+    },
+    {
+      "ts": "2026-11-16T22:32:44",
+      "status": 200,
+      "latency_ms": 134,
+      "question": "Who is the prime minister of Canada?",
+      "answer": "I don't have enough information about that.",
+      "refused": true,
+      "best_distance": 0.8878,
+      "sources": [],
+      "cited": [],
+      "tokens": 0
+    },
+    {
+      "ts": "2026-11-16T22:32:47",
+      "status": 200,
+      "latency_ms": 3643,
+      "question": "Which parking lots can students buy permits for, and is there a waitlist?",
+      "answer": "Students can buy permits for the west and east lots, and there is no waitlist (admin_parking_permits.txt).",
+      "refused": false,
+      "best_distance": 0.3733,
+      "sources": [
+        "admin_parking_permits.txt",
+        "advising_registration.txt",
+        "dining_verrill_street_grill.txt",
+        "money_textbooks.txt",
+        "transit_shuttle.txt"
+      ],
+      "cited": [
+        "admin_parking_permits.txt"
+      ],
+      "tokens": 654
+    },
+    {
+      "ts": "2026-11-16T22:32:49",
+      "status": 200,
+      "latency_ms": 1511,
+      "question": "When can students declare a major, and is there a penalty or advantage to timing?",
+      "answer": "Students declare their major at the end of their second semester or later if needed. According to `admin_declaring_a_major.txt`, there is no penalty for declaring late and no advantage to declaring early, except that an early declaration assigns you a departmental adviser.",
+      "refused": false,
+      "best_distance": 0.2458,
+      "sources": [
+        "admin_add_drop_deadline.txt",
+        "admin_declaring_a_major.txt",
+        "admin_grade_appeals.txt",
+        "admin_graduation_requirements.txt",
+        "admin_pass_fail_option.txt"
+      ],
+      "cited": [
+        "admin_declaring_a_major.txt"
+      ],
+      "tokens": 571
+    },
+    {
+      "ts": "2026-11-16T22:32:50",
+      "status": 200,
+      "latency_ms": 648,
+      "question": "What are the quiet floors in Aldridge Hall?",
+      "answer": "The quiet floors in Aldridge Hall are floors 3 and 4 (housing_aldridge_hall.txt and housing_aldridge_hall_noise.txt).",
+      "refused": false,
+      "best_distance": 0.3459,
+      "sources": [
+        "housing_aldridge_hall.txt",
+        "housing_aldridge_hall_noise.txt",
+        "housing_innisfree_hall_noise.txt",
+        "housing_old_brewhouse_noise.txt",
+        "housing_tamsin_court_noise.txt"
+      ],
+      "cited": [
+        "housing_aldridge_hall.txt",
+        "housing_aldridge_hall_noise.txt"
+      ],
+      "tokens": 641
+    },
+    {
+      "ts": "2026-11-16T22:32:51",
+      "status": 200,
+      "latency_ms": 1370,
+      "question": "How many washers and dryers are in Fenwick Court?",
+      "answer": "There are eight washers and six dryers in Fenwick Court. This information comes from the documents `housing_fenwick_court_laundry.txt` and `housing_tamsin_court_laundry.txt` (and others).",
+      "refused": false,
+      "best_distance": 0.3217,
+      "sources": [
+        "housing_aldridge_hall_laundry.txt",
+        "housing_fenwick_court.txt",
+        "housing_fenwick_court_laundry.txt",
+        "housing_old_brewhouse_laundry.txt",
+        "housing_tamsin_court_laundry.txt"
+      ],
+      "cited": [
+        "housing_fenwick_court_laundry.txt",
+        "housing_tamsin_court_laundry.txt"
+      ],
+      "tokens": 679
+    },
+    {
+      "ts": "2026-11-16T22:32:52",
+      "status": 200,
+      "latency_ms": 1210,
+      "question": "How many pages can I print per semester?",
+      "answer": "You can print roughly 600 black-and-white pages per semester, based on a $30 printing quota (admin_printing_quota.txt).",
+      "refused": false,
+      "best_distance": 0.3171,
+      "sources": [
+        "admin_graduation_requirements.txt",
+        "admin_printing_quota.txt",
+        "course_cs_340.txt",
+        "course_engl_205.txt",
+        "money_textbooks.txt"
+      ],
+      "cited": [
+        "admin_printing_quota.txt"
+      ],
+      "tokens": 637
+    },
+    {
+      "ts": "2026-11-16T22:32:53",
+      "status": 200,
+      "latency_ms": 892,
+      "question": "When does the campus shuttle run?",
+      "answer": "The campus shuttle runs every 20 minutes from 7am to 11pm on weekdays and every 40 minutes on weekends (transit_shuttle.txt).",
+      "refused": false,
+      "best_distance": 0.4021,
+      "sources": [
+        "dining_halden_hall_followup.txt",
+        "dining_kestrel_commons_followup.txt",
+        "dining_the_ridgeway_cafe_followup.txt",
+        "transit_shuttle.txt",
+        "transit_walking.txt"
+      ],
+      "cited": [
+        "transit_shuttle.txt"
+      ],
+      "tokens": 714
+    },
+    {
+      "ts": "2026-11-16T22:32:54",
+      "status": 200,
+      "latency_ms": 880,
+      "question": "Where can I find cheap textbooks?",
+      "answer": "You can find textbooks without paying full price at the library (which holds one copy of most required texts on two-hour reserve) or at the campus store, which price-matches if you ask at the counter with another listing on your phone. \nSource: money_textbooks.txt",
+      "refused": false,
+      "best_distance": 0.2964,
+      "sources": [
+        "admin_library_holds.txt",
+        "admin_printing_quota.txt",
+        "course_math_220.txt",
+        "money_textbooks.txt",
+        "study_group_rooms.txt"
+      ],
+      "cited": [
+        "money_textbooks.txt"
+      ],
+      "tokens": 619
+    },
+    {
+      "ts": "2026-11-16T22:32:55",
+      "status": 200,
+      "latency_ms": 651,
+      "question": "What are the hours for the Verrill Street Grill?",
+      "answer": "The hours for the Verrill Street Grill are 11:00am to 1:00am daily during term (dining_verrill_street_grill.txt).",
+      "refused": false,
+      "best_distance": 0.2779,
+      "sources": [
+        "dining_halden_hall.txt",
+        "dining_kestrel_commons.txt",
+        "dining_north_kitchen.txt",
+        "dining_verrill_street_grill.txt",
+        "dining_verrill_street_grill_followup.txt"
+      ],
+      "cited": [
+        "dining_verrill_street_grill.txt"
+      ],
+      "tokens": 798
+    },
+    {
+      "ts": "2026-11-16T22:32:55",
+      "status": 200,
+      "latency_ms": 615,
+      "question": "How many credits do I need to graduate?",
+      "answer": "You need 120 credit hours to graduate (admin_graduation_requirements.txt).",
+      "refused": false,
+      "best_distance": 0.3033,
+      "sources": [
+        "admin_add_drop_deadline.txt",
+        "admin_declaring_a_major.txt",
+        "admin_graduation_requirements.txt",
+        "admin_pass_fail_option.txt",
+        "course_engl_205.txt"
+      ],
+      "cited": [
+        "admin_graduation_requirements.txt"
+      ],
+      "tokens": 575
+    },
+    {
+      "ts": "2026-11-16T22:32:56",
+      "status": 200,
+      "latency_ms": 612,
+      "question": "What on-campus jobs are available to students?",
+      "answer": "Library and dining jobs are available to students on campus. This information comes from money_jobs.txt.",
+      "refused": false,
+      "best_distance": 0.4953,
+      "sources": [
+        "admin_campus_jobs_and_financial_aid.txt",
+        "admin_wifi_and_accounts.txt",
+        "dining_verrill_street_grill.txt",
+        "money_jobs.txt",
+        "money_textbooks.txt"
+      ],
+      "cited": [
+        "money_jobs.txt"
+      ],
+      "tokens": 621
+    }
+  ]
+}
