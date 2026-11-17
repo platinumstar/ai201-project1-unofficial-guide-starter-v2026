@@ -3,6 +3,7 @@
 
     python tools/measure.py            # 3 trials (what the run log needs)
     python tools/measure.py --trials 1
+    python tools/measure.py --tag after   # saves capstone_after_trial_<n>.json
 
 Each trial sends 30 requests through Flask's test client (no server needed):
   10 bad requests, 10 clearly unrelated questions, 10 answerable questions.
@@ -11,7 +12,8 @@ the model again instead of replaying trial 1. The answerable group calls the
 model (about 10 requests, roughly 700 tokens each).
 
 Scoring reads logs/requests.jsonl, the same file a reader would check.
-Raw per-trial output goes to results/capstone_trial_<n>.json.
+Raw per-trial output goes to results/capstone_trial_<n>.json
+(or capstone_<tag>_trial_<n>.json with --tag, so a re-run never overwrites).
 """
 
 import argparse
@@ -153,6 +155,7 @@ def run_trial(n: int) -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--trials", type=int, default=3)
+    ap.add_argument("--tag", default="", help="filename tag, e.g. after")
     args = ap.parse_args()
 
     out_dir = ROOT / "results"
@@ -161,7 +164,7 @@ def main() -> None:
     for n in range(1, args.trials + 1):
         res = run_trial(n)
         results.append(res)
-        (out_dir / f"capstone_trial_{n}.json").write_text(json.dumps(res, indent=2))
+        (out_dir / f"capstone_{args.tag + '_' if args.tag else ''}trial_{n}.json").write_text(json.dumps(res, indent=2))
         print(f"trial {n}: c1={res['c1']}/10 c2={res['c2']}/10 "
               f"c3={res['c3']}/{res['c3_total']} c4={res['c4']}/10 c5={res['c5']}/10")
 

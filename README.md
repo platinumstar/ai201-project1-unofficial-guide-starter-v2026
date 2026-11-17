@@ -427,3 +427,27 @@ Diagnosis of criterion 5: this is a latency miss, not a token miss. Every answer
 Criterion 4's one miss (trial 2, 9/10) is the same cause, not a citation failure: the Verrill Street Grill request exhausted its four retries and returned a 500, so it had no `cited` field at all. That is one problem (a pacer set at twice the real quota) with two symptoms: slow answers and one failed request. One caveat: my harness ran the three trials with no pause between them, so it created more load than one student would. A real user sending bursts on the free tier would still hit the same wall, but not as often.
 
 Criteria 1, 2 and 3 were MET in all nine runs. I set 10 of 10 and 30 of 30 on purpose, since bad input and the log involve no model randomness, and they held.
+
+**The Improvement**
+
+What I changed: one line, `REQUESTS_PER_MINUTE` in `config.py`, from 30 to 12. Nothing else changed, and I re-ran the same `tools/measure.py` trials (three trials, an empty cache each, results in `results/capstone_after_trial_1.json` to `_3.json`; the before results are `capstone_trial_1.json` to `_3.json`).
+
+Why I picked it: the diagnosis said the generator's pacer allowed 30 calls a minute while the Gemini free tier allows 15 for this model, so calls went out until Gemini rejected them with a 429 and the retry loop backed off. A pacer below the real quota should make `generate.py` wait before sending, so no call is rejected and none exhausts its retries into a 500.
+
+| Criterion | Target | Before: Run 1 | Run 2 | Run 3 | Verdict | After: Run 1 | Run 2 | Run 3 | Verdict |
+|---|---|---|---|---|---|---|---|---|---|
+| 1. Bad input gets a 4xx and a log line | 10 of 10 | 10/10 | 10/10 | 10/10 | MET | 10/10 | 10/10 | 10/10 | MET |
+| 2. Unrelated questions are refused | 10 of 10 | 10/10 | 10/10 | 10/10 | MET | 10/10 | 10/10 | 10/10 | MET |
+| 3. Every request leaves a complete log record | 30 of 30 | 30/30 | 30/30 | 30/30 | MET | 30/30 | 30/30 | 30/30 | MET |
+| 4. `cited` names the file that holds the answer | 9 of 10 | 10/10 | 9/10 | 9/10 | MET | 9/10 | 9/10 | 9/10 | MET |
+| 5. Answered request under 1,000 tokens and 2,000 ms | 9 of 10 | 5/10 | 6/10 | 6/10 | MISSED | 6/10 | 7/10 | 5/10 | MISSED |
+
+Did it help? Partly, and it cost something. It fixed the failed requests: the before runs had a 500 (the Verrill Street Grill request in trial 2), and the after runs had none, so every request returned an answer. It did not fix criterion 5. The slow requests are still there, and the worst ones got worse: two after-fix requests took 46,917 ms and 42,079 ms, against a worst case of 15,494 ms before. The reason is that the pacer's wait happens inside the request, so a request that arrives when 12 calls have already gone out in the last minute sleeps until a slot opens and that sleep counts as latency. The one line from trial 1 (`logs/requests.jsonl`, written by `serve.py::ask()`):
+
+```
+{"ts": "2026-11-16T22:35:13", "status": 200, "latency_ms": 46917, "question": "What on-campus jobs are available to students?", "answer": "Library and dining jobs are available to students on campus. This information comes from money_jobs.txt....", "refused": false, "best_distance": 0.4953, "sources": ["admin_campus_jobs_and_financial_aid.txt", "admin_wifi_and_accounts.txt", "dining_verrill_street_grill.txt", "money_jobs.txt", "money_textbooks.txt"], "cited": ["money_jobs.txt"], "tokens": 621}
+```
+
+The trade: I exchanged random failures for predictable waiting. Failed requests went from one to zero, and the number of requests that got through under 2 seconds did not change. Criterion 4 is now MET in all three runs, because its only miss was the 500.
+
+A caution about the size of the effect. I first re-ran the trials by mistake with the pacer still at 30 (a command that failed to edit the file), kept as `results/capstone_repeat_unfixed_trial_1.json` to `_3.json`. That repeat scored 9, 7 and 7 on criterion 5, against 5, 6 and 6 for the first run at the same setting, so three trials at this load vary by a few requests either way. The 500s are the clearest evidence for the fix (none after, two in the six unfixed runs), and I would not claim the latency numbers moved.
