@@ -63,6 +63,11 @@ in at least 4 of 5 tries.
 **Why this target:**
 
 "I haven't run Milestone 4 yet, so I'm setting this target before I've seen the actual distance gap between in-scope and out-of-scope questions. I'll revisit it once I have real numbers."
+
+After running Milestone 4, I measured in-scope distances from 0.20 to 0.37
+and out-of-scope distances from 0.82 to 0.93, with a clear gap; I set the
+relevance cutoff at 0.6. The original note above records what I knew when I
+first wrote this criterion.
 <!-- What did your distances look like when you set the cutoff in Milestone 4?
      Was there a clean gap, or did the two groups overlap? -->
 

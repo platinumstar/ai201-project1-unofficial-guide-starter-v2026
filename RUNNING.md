@@ -208,7 +208,7 @@ gunicorn serve:app                 # the way a host starts it
 
 | Thing | What it does |
 |---|---|
-| `POST /ask` | Send `{"question": "..."}`, get the answer and its sources back as JSON |
+| `POST /ask` | Send `{"question": "..."}`, get the answer back as JSON, with `sources` (everything retrieved) and `cited` (files the answer names) |
 | `GET /health` | Says whether the service is up and whether an index exists to search |
 | `PORT` | The port to listen on. Hosts set it for you; on your laptop it defaults to 5000 |
 | `AI201_DEBUG=1` | Flask's reloader and debugger. Local only — never set it on a deployed service |
@@ -217,15 +217,16 @@ gunicorn serve:app                 # the way a host starts it
 > the first request after a quiet spell waits roughly a minute for it to wake
 > up. That's the tier, not your code.
 
-`serve.py` shipped with **no logging and no timing in it on purpose** — building
-that is the unit 9 exercise. The capstone version below has both.
+The starter version of `serve.py` shipped with **no logging or timing on
+purpose** — building that is the unit 9 exercise. The capstone version below
+adds structured logging for `/ask` requests and latency measurements.
 
 ---
 
 ## Capstone run path (Path B: local, with logs)
 
 Runs on your own machine, started by one command, and writes a structured log
-of every request to `logs/requests.jsonl`.
+of each `POST /ask` request to `logs/requests.jsonl`.
 
 **Environment**
 
@@ -235,13 +236,14 @@ of every request to `logs/requests.jsonl`.
 | Dependencies | `requirements.txt`, pinned with lower and upper bounds |
 | Embedding model | `all-MiniLM-L6-v2`, about 80 MB, downloaded on the first index build and then cached. Runs locally |
 | Search index | `chroma_db/`, about 3 to 6 MB. Not in git, so you build it (step 4) |
-| API key | A Gemini key in `.env` as `GEMINI_API_KEY`. The only paid dependency, free at the course tier |
+| API key | Create a Gemini API key in [Google AI Studio](https://aistudio.google.com), then put it in `.env` as `GEMINI_API_KEY`. The API has a free tier; check Google's current limits and pricing |
 
 **From a clean checkout** (macOS / Linux):
 
 ```bash
 # 1. clone and enter the repo
-git clone <repo-url> && cd <repo-folder>
+git clone https://github.com/platinumstar/ai201-project1-unofficial-guide-starter-v2026.git
+cd ai201-project1-unofficial-guide-starter-v2026
 
 # 2. environment
 python3 -m venv .venv
@@ -249,7 +251,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 # 3. API key
-cp .env.example .env              # then paste your key into .env
+cp .env.example .env              # then paste your AI Studio key into .env
 
 # 4. build the search index (first run downloads the embedding model)
 python app.py index
@@ -261,16 +263,85 @@ PORT=5001 python serve.py
 Port 5001 is used because macOS reserves 5000 for AirPlay Receiver. On other
 systems `python serve.py` serves on 5000. `PORT` overrides either.
 
+**From a clean checkout (Windows PowerShell):**
+
+```powershell
+# 1. clone and enter the repo
+git clone https://github.com/platinumstar/ai201-project1-unofficial-guide-starter-v2026.git
+cd ai201-project1-unofficial-guide-starter-v2026
+
+# 2. create the environment (activation is not required)
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+
+# 3. add your Gemini API key to .env
+Copy-Item .env.example .env
+# Open .env and set GEMINI_API_KEY to your AI Studio key
+
+# 4. build the search index (first run downloads the embedding model)
+.\.venv\Scripts\python.exe app.py index
+
+# 5. start the server on port 5001
+$env:PORT = "5001"
+.\.venv\Scripts\python.exe serve.py
+```
+
+Using the virtual environment's Python directly avoids PowerShell's script
+activation policy; keep using that executable for the index and server commands.
+
 **Check that it works** (from a second terminal):
+
+The generator is paced at 12 outgoing model calls per minute
+(`config.REQUESTS_PER_MINUTE`). The server also limits incoming requests to 20
+per minute per client. Rapid new questions may be delayed by the generator
+pacer; repeated questions may use the response cache and not call the model.
+For a demo, allow the response to finish before sending another new question.
 
 ```bash
 curl http://localhost:5001/health
 # {"corpus":"campus_life","detail":"ready","index_ready":true,"status":"ok"}
 
+# Answerable question: send it and pretty-print the JSON response
 curl -s -X POST http://localhost:5001/ask -H 'Content-Type: application/json' \
-  -d '{"question": "How many pages can I print per semester?"}'
+  -d '{"question": "How many pages can I print per semester?"}' | python -m json.tool
+
+# Out-of-corpus question: the gate should refuse it
+curl -s -X POST http://localhost:5001/ask -H 'Content-Type: application/json' \
+  -d '{"question": "What is the capital of Mongolia?"}' | python -m json.tool
+
+# Bad input: an empty question returns 400 with a JSON error
+curl -s -X POST http://localhost:5001/ask -H 'Content-Type: application/json' \
+  -d '{"question": ""}' | python -m json.tool
 
 cat logs/requests.jsonl           # one JSON line per request
+```
+
+In Windows PowerShell, use `Invoke-RestMethod`, which avoids the quoting
+problems `curl.exe` has with JSON in PowerShell 5.1:
+
+```powershell
+# health
+Invoke-RestMethod http://localhost:5001/health | ConvertTo-Json
+
+# answerable question
+$body = @{ question = "How many pages can I print per semester?" } | ConvertTo-Json
+Invoke-RestMethod -Method Post -Uri http://localhost:5001/ask -ContentType "application/json" -Body $body | ConvertTo-Json -Depth 10
+
+# gate refusal: "refused": true, status 200
+$body = @{ question = "What is the capital of Mongolia?" } | ConvertTo-Json
+Invoke-RestMethod -Method Post -Uri http://localhost:5001/ask -ContentType "application/json" -Body $body | ConvertTo-Json -Depth 10
+
+# bad input: Invoke-RestMethod throws on 4xx, so read the status from the error
+$body = @{ question = "" } | ConvertTo-Json
+try {
+  Invoke-WebRequest -Method Post -Uri http://localhost:5001/ask -ContentType "application/json" -Body $body
+} catch {
+  $_.Exception.Response.StatusCode.value__
+  $_.ErrorDetails.Message
+}
+
+# the log line the last request produced
+Get-Content logs/requests.jsonl -Tail 1 | ConvertFrom-Json | ConvertTo-Json -Depth 10
 ```
 
 **What the server does with bad input** (each one is logged):

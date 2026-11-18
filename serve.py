@@ -20,11 +20,10 @@ Why this exists: `app.py` runs once and exits, which is fine on your laptop
 and impossible to deploy. A hosted service has to stay up and wait for
 requests. This is the smallest thing that does that.
 
-⚠️ There is deliberately no logging, no timing and no metrics in this file.
-Unit 9 has you build the structured log yourself — the request line, the
-timing field everyone skips, the whole instrument-before-you-deploy exercise.
-Shipping a logger here would hand you the answer to that. Add yours in unit 9;
-this file stays the bare shell until then.
+The starter version deliberately shipped without logging or timing so Unit 9
+could introduce instrumentation. The capstone version records structured
+request events through `obslog.log_event`, including latency and token counts
+where applicable.
 """
 
 import os
@@ -193,6 +192,7 @@ def ask():
             "answer": outcome["answer"],
             "refused": outcome["refused"],
             "sources": outcome["sources"],
+            "cited": cited,
             "best_distance": round(outcome["best_distance"], 4),
             "threshold": outcome["threshold"],
             "corpus": config.CORPUS,
